@@ -1,0 +1,45 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+description: >
+  Chaîne de services réseau Firewall -> Load Balancer -> Web Server
+  orchestrée avec xOpera sur localhost.
+
+topology_template:
+  node_templates:
+    # Définition de l'hôte avec son adresse locale
+    MonHote:
+      type: tosca.nodes.Compute
+      attributes:
+        public_address: localhost
+
+    Firewall:
+      type: tosca.nodes.SoftwareComponent
+      requirements:
+        - host: MonHote
+      interfaces:
+        Standard:
+          operations:
+            create:
+              implementation: playbooks/deploy_firewall.yaml
+
+    LoadBalancer:
+      type: tosca.nodes.SoftwareComponent
+      requirements:
+        - host: MonHote
+        - dependency: Firewall
+      interfaces:
+        Standard:
+          operations:
+            create:
+              implementation: playbooks/deploy_loadbalancer.yaml
+
+    WebServer:
+      type: tosca.nodes.SoftwareComponent
+      requirements:
+        - host: MonHote
+        - dependency: LoadBalancer
+      interfaces:
+        Standard:
+          operations:
+            create:
+              implementation: playbooks/deploy_webserver.yaml

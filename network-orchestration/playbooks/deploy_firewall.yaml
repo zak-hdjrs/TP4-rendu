@@ -1,0 +1,24 @@
+---
+- name: Déploiement du VNF Firewall
+  hosts: localhost
+  gather_facts: false
+  connection: local
+  tasks:
+    - name: Vérifier si le conteneur existe déjà
+      shell: docker ps -a -q -f name=vnf-firewall
+      register: firewall_exists
+      ignore_errors: true
+      changed_when: false
+
+    - name: Supprimer l'ancien conteneur si existe
+      shell: docker rm -f vnf-firewall
+      when: firewall_exists.stdout != ""
+      ignore_errors: true
+
+    - name: Lancer le conteneur Firewall (nginx simplifié)
+      shell: docker run -d --name vnf-firewall -p 8080:80 nginx:alpine
+      register: firewall_output
+
+    - name: Afficher le résultat
+      debug:
+        msg: "Firewall déployé: {{ firewall_output.stdout }}"
